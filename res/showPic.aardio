@@ -1,0 +1,14 @@
+import win.ui;
+/*DSG{{*/
+var winform = win.form(text="咚咚快翻";right=1100;bottom=800;parent=...)
+winform.add(
+plus={cls="plus";left=21;top=11;right=1059;bottom=782;z=1}
+)
+/*}}*/
+
+
+winform.enableDpiScaling();
+winform.show();
+
+win.loopMessage();
+return winform;

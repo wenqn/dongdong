@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project ver="10" name="咚咚快翻" libEmbed="true" icon="res\sys.ico" ui="win" output="咚咚快翻.exe" CompanyName="单位名称" FileDescription="咚咚快翻" LegalCopyright="Copyright (C) wenqn 2017" ProductName="咚咚快翻" InternalName="咚咚快翻" FileVersion="0.0.0.09" ProductVersion="0.0.0.09" publishDir="/Publish/" dstrip="false">
+	<file name="main.aardio" path="main.aardio" comment="main.aardio"/>
+	<folder name="资源文件" path="res" embed="true">
+		<file name="hit.wav" path="res\hit.wav" comment="res\hit.wav"/>
+		<file name="icon.jpg" path="res\icon.jpg" comment="res\icon.jpg"/>
+		<file name="showPic.aardio" path="res\showPic.aardio" comment="res\showPic.aardio"/>
+		<file name="suiji2.wav" path="res\suiji2.wav" comment="res\suiji2.wav"/>
+		<file name="sys.ico" path="res\sys.ico" comment="res\sys.ico"/>
+		<file name="sysicon.gif" path="res\sysicon.gif" comment="res\sysicon.gif"/>
+		<file name="yang.aardio" path="res\yang.aardio" comment="res\yang.aardio"/>
+		<file name="yang.wav" path="res\yang.wav" comment="res\yang.wav"/>
+		<file name="击鼓.wav" path="res\击鼓.wav" comment="res\击鼓.wav"/>
+		<file name="杨.jpg" path="res\杨.jpg" comment="res\杨.jpg"/>
+	</folder>
+</project>

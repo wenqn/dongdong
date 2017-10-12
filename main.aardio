@@ -1,0 +1,270 @@
+import win.ui;
+import win.ui.atom;
+import fsys;
+import fsys.dlg;
+import gdip;
+import win.animate;
+import win;
+
+/* 版本号 */
+_APP_VERSION = "V1.1";
+
+
+/*DSG{{*/
+mainForm = win.form(text="咚咚快翻 "+ _APP_VERSION;right=759;bottom=469)
+mainForm.add(
+button={cls="button";text="浏览";left=414;top=23;right=486;bottom=50;dl=1;dt=1;z=3};
+button2={cls="button";text="随机";left=496;top=23;right=568;bottom=50;dl=1;dt=1;z=4};
+checkbox={cls="checkbox";text="静音";left=582;top=27;right=645;bottom=50;dl=1;dt=1;font=LOGFONT(h=-15);z=7};
+custom={cls="custom";text="custom";left=19;top=64;right=732;bottom=433;ah=1;aw=1;bgcolor=16777215;db=1;dl=1;dr=1;dt=1;z=5};
+edit2={cls="edit";left=137;top=23;right=407;bottom=50;dl=1;dt=1;edge=1;z=2};
+plus={cls="plus";left=673;top=10;right=720;bottom=55;dr=1;dt=1;foreRepeat="expand";foreground="\res\sysicon.gif";notify=1;z=6};
+static={cls="static";text="选择图片文件夹";left=27;top=23;right=139;bottom=50;center=1;dl=1;dt=1;font=LOGFONT(h=-15);transparent=1;z=1};
+static2={cls="static";left=23;top=444;right=154;bottom=462;center=1;db=1;dl=1;transparent=1;z=8};
+static3={cls="static";text="god991@sina.com";left=486;top=441;right=724;bottom=461;align="right";center=1;db=1;dr=1;transparent=1;z=9}
+)
+/*}}*/
+
+
+
+//彩蛋，计数器
+var t = 0
+mainForm.plus.oncommand = function(id,event){
+	t++;
+	if(t=20){
+		t=0;
+		myPlaySound("/res/yang.wav")
+		mainForm.loadForm("\res\yang.aardio");
+	}
+	
+}
+
+
+var atom,hwnd/*冲突窗口的句柄,该函数会自动激活此窗口*/ = mainForm.atom("FF3D0AC2-F6AA-42B2-B760-296EBE5EFBFF");
+if(!atom){
+	/*为窗口设置原子值可以避免一个程序重复运行多个实例*/
+	win.quitMessage();	return;
+}
+
+
+/* 设置垂直滚动条 */
+import win.ui.scrollbar;
+var scrollbar = win.ui.scrollbar(mainForm.custom.hwnd,true) 
+scrollbar.setRange(1,1000,10);//这里参数1,1000指像素，不是百分比，第三个参数是page的步进值
+mainForm.custom.wndproc = {
+    [0x115/*_WM_VSCROLL*/] = function(hwnd,message,wParam,lParam){ 
+        var event,pos = ::LOWORD (wParam),::HIWORD(wParam);
+        var min,max,page = scrollbar.getRange();
+
+        select(event) {
+            case 8/*_SB_ENDSCROLL*/ {
+                return;
+            } 
+            case 0/*_SB_LINEUP*/  {
+                pos = scrollbar.pos - 1
+            }
+            case 1/*_SB_LINEDOWN*/{
+                pos = scrollbar.pos + 1
+            }
+            case 0x2/*_SB_PAGEUP*/{
+                pos = scrollbar.pos - page;
+            }
+            case 0x3/*_SB_PAGEDOWN*/{
+                pos = scrollbar.pos + page;
+            } 
+        }
+ 
+        ::User32.ScrollWindow(mainForm.custom.hwnd,0, scrollbar.pos - pos,null,null); 
+        scrollbar.pos = pos;
+    }  
+}
+
+
+
+/* 随机按钮 */
+mainForm.button2.oncommand = function(id,event){
+	//mainForm.msgbox( mainForm.button2.text );
+	if(#pics == 0){
+		return win.msgbox("没有可加载的图片");
+	}
+	
+	/* 生成多个个随机数，最后一个随机数是要打开的图片的序号 */
+	import math;	
+	var rand = 1;
+	math.randomize();
+	myPlaySound("/res/suiji2.wav")
+	for(i=1;7;1){
+		/* randomize()放到循环内部会产生递增随机序列，降低随机效果，why？ */
+		rand = math.random(1, #pics);
+		animatePic(rand);
+		
+	}
+	var showPic = loadcodex("/res/showPic.aardio");
+	showPic.plus.background = pics[rand]["path"];
+}
+
+/* 每产生一个随机数，该数字位序的图片消失再出现的动画效果 */
+animatePic = function(id){
+	var pic = mainForm.custom["picturebox" + id]
+	win.animate.roll(pic).hide();
+	win.animate.fade(pic).show();
+	
+}
+
+
+
+
+
+/* 选择图片文件夹按钮 */
+mainForm.button.oncommand = function(id,event){
+	//mainForm.msgbox( mainForm.button.text );
+	
+	picDir = fsys.dlg.opendir();
+	
+	if(#picDir){
+		mainForm.edit2.text = picDir;
+		
+		//枚举文件夹中的图片文件，将路径存入表pics中
+		var index = 1;
+		pics = {}
+		fsys.enum( picDir, "*.*",
+			function(dir,filename,fullpath,findData){
+				if(filename){
+					var ext = fsys.getExtensionName(filename);//取扩展名
+					if(ext == "jpg" || ext == "bmp" || ext == "png" || ext == "gif"){
+						table.push(pics,{id=index;path=fullpath})	
+		            	index++;
+					}
+
+				}
+				
+			} 
+			,/*如果此参数为false则忽略子目录*/
+		);
+		
+		if(index > 200){
+			return win.msgbox("加载图片数量太多，请不要超过200张","程序撑死了");
+		}
+		
+		
+		//左下角统计图片数量
+		mainForm.static2.text = "共" + (index-1) + "张图片";
+		
+		delPicIcon();
+		addPicIcon();
+		addPic();
+		
+	}
+	
+}
+
+/* 切换目录时清除原有图标 */
+delPicIcon = function(){
+	for(name,ctrl in mainForm.custom.eachControl("picturebox") ){
+			ctrl.close();		
+	}
+}
+
+
+/* 在custom中排列缩略图 */
+addPicIcon = function(maxWidth){
+	    
+	var lastx = 10;//初始x坐标
+	var lasty = 20;//初始y坐标
+	var icon =  gdip.image("\res\icon.jpg");
+	var w = mainForm.custom.width;
+	if(maxWidth){
+		w = maxWidth;	
+	}
+	var h = mainForm.custom.height; 
+		 
+	
+	for(k,v in pics){
+		if(k > 1){
+			lastx += 100;
+			if((lastx+icon.width)>w){
+				lastx = 10;
+				lasty += 120;
+			}	
+		}	
+		
+		mainForm.custom.add( 		
+			["picturebox"+k] = {
+				cls="picturebox";left=lastx;right=lastx+icon.width;top=lasty;bottom=lasty+icon.height;z=10+k;image=$"\res\icon.jpg";text="picturebox";border=1;id=id;autoResize=false;notify=true/*notify为真才会触发事件*/
+			}
+		)		
+		
+	}	
+	
+}
+
+
+/* 在图标文件上添加触发事件， */
+addPic = function(){
+	for(k,v in pics){
+		mainForm.custom["picturebox"+k].oncommand = function(id,event){
+			//播放效果音
+			sound = "\res\hit.wav";
+			myPlaySound(sound);
+			
+			
+			//图标消失出现动画
+			var pic = mainForm.custom["picturebox" + k];
+			win.animate.fade(pic).hide();
+			win.animate.fade(pic).show();
+			
+			//win.delay(1000);
+			//加载图像 picturebox不能加载png格式图片， 用plus控件
+			var showPic = loadcodex("/res/showPic.aardio");
+			showPic.plus.background=pics[k]["path"];
+			
+			
+		}	
+	}	
+			
+}
+
+
+/*  播放音效 MP3 wav格式音效，media为音效路径*/
+myPlaySound = function(media){
+	var quiet = mainForm.checkbox.checked;
+	if(!quiet){
+		import fsys.media;
+		fsys.media.playSound(media); 
+	}
+	
+}
+
+
+/* 
+	主窗体最大化后重新排列图标 
+	在mainForm最大化或还原后重新计算custom的宽度，然后重新加载图片，并添加事件响应
+*/
+mainForm.wndproc = function(hwnd,message,wParam,lParam){ 
+	select(message) {
+		case 0x5/*_WM_SIZE*/ {
+			if(wParam == 0x2/*_SIZE_MAXIMIZED*/ || wParam == 0x0/*_SIZE_RESTORED*/){
+			/* 
+				27为 mainForm 与 custom 初始右边距之差
+				因为在捕获主窗口mainForm最大化消息后，虽然custom已经设置里固定边距 ，
+				但custom尺寸并不是立即改变，而是在下列代码执行完之后才改变尺寸。
+				因此，无法通过custom.width获取最大化或还原之后的值，
+				所以，可以通过固定右边距之差，作为custom新的宽度
+				
+			
+			*/
+				maxWidth=mainForm.width - 27;
+				addPicIcon(maxWidth);
+				addPic();
+			}
+			
+		}
+		
+	}
+}
+
+
+mainForm.enableDpiScaling();
+mainForm.show();
+
+return win.loopMessage(); 
